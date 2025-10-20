@@ -36,16 +36,7 @@ const login = asyncErrorWrapper(async (req, res, next) => {
     return next(new CustomError("password is incorrect", 400));
   }
 
-  res.status(200).json({
-    success: true,
-    message: "User logged in successfully",
-    data: {
-      email,
-      password,
-      access_token: sendJwtToClient(user, res),
-      id: user.id,
-    },
-  });
+  return sendJwtToClient(user, res, "User logged in successfully")
 });
 
 const getuser = (req, res, next) => {
@@ -92,10 +83,31 @@ const imageUpload = asyncErrorWrapper(async (req, res, next) => {
   });
 });
 
+
+const forgotPassword = asyncErrorWrapper(async (req, res, next) => {
+  const user = await user.findOne({ email: req.body.mail })
+
+  if (!user) {
+    return next(new CustomError("There is no user with this email", 400));
+  }
+
+
+  const resetPasswordToken = user.getResetPasswordTokenFromUser();
+  await user.save();
+
+
+  res.json({
+    success: true,
+    message: "Reset password token sent to email",
+    data: resetPasswordToken,
+  })
+});
+
 module.exports = {
   register,
   getuser,
   login,
   logout,
   imageUpload,
+  forgotPassword,
 };
