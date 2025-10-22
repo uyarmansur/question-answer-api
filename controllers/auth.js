@@ -6,6 +6,8 @@ const {
   comparePasswords,
 } = require("../helpers/input/validateInputHelper.js");
 
+const sendEmail = require('../helpers/libraries/sendEmail.js')
+
 const CustomError = require("../helpers/error/CustomError");
 
 const register = asyncErrorWrapper(async (req, res, next) => {
@@ -85,23 +87,75 @@ const imageUpload = asyncErrorWrapper(async (req, res, next) => {
 
 
 const forgotPassword = asyncErrorWrapper(async (req, res, next) => {
-  const user = await user.findOne({ email: req.body.mail })
 
+  const resetEmail = req.body.email
+  const user = await User.findOne({ email: resetEmail })
   if (!user) {
     return next(new CustomError("There is no user with this email", 400));
   }
 
 
   const resetPasswordToken = user.getResetPasswordTokenFromUser();
-  await user.save();
+  await user.save({ validateBeforeSave: false });
 
 
-  res.json({
-    success: true,
-    message: "Reset password token sent to email",
-    data: resetPasswordToken,
-  })
+
+  const resetPasswordUrl = `http://localhost:5000/api/auth/resetPassword?resetPasswordToken=${resetPasswordToken}`
+
+  const emailTemplate = `
+  <h3>Reset Your Password</h3>
+  <p>This <a href='${resetPasswordUrl}' target='_blank'>link</a> will expire in 1 hour</p>
+  `;
+  try {
+    await sendEmail({
+      from: process.env.SMTP_USER,
+      to: resetEmail,
+      subject: "Reset Your Password",
+      html: emailTemplate
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Reset password token sent to email",
+    })
+  } catch (err) {
+    console.error("💥 Email gönderim hatası:", err);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save({ validateBeforeSave: false })
+
+    return next(new CustomError("Email could not be sent!", 500))
+  }
+
 });
+
+const resetPassword = asyncErrorWrapper(async (req, res, next) => {
+  const { resetPasswordToken } = req.query
+  const { password } = req.body
+
+  if (!resetPasswordToken) {
+    return new CustomError("Please provide a valid token", 400)
+  }
+
+  let user = await User.findOne({
+    resetPasswordToken: resetPasswordToken,
+    //gt = greater than which comes from monfoDB
+    resetPassswordExpire: { $gt: Date.now() }
+  })
+
+  if (!user) {
+    return next(new CustomError("INvalid token or session expired", 404))
+  }
+
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined
+  user.save({ validateBeforeSave: true })
+  return res.json({
+    success: true,
+    message: "Reset password process successful"
+  })
+})
 
 module.exports = {
   register,
@@ -110,4 +164,5 @@ module.exports = {
   logout,
   imageUpload,
   forgotPassword,
+  resetPassword
 };

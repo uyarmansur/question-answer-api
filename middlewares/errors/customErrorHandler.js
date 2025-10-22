@@ -1,4 +1,4 @@
-const CustomError = require("../../helpers/error/CustomError");
+const CustomError = require("../../helpers/error/CustomError.js");
 
 const customErrorHandler = (err, req, res, next) => {
   if (res.headersSent) {
@@ -9,6 +9,9 @@ const customErrorHandler = (err, req, res, next) => {
 
   if (err.name === "SyntaxError") {
     customErr = new CustomError("Invalid JSON syntax", 400);
+  }
+  if (err.name === "CastError") {
+    customErr = new CustomError("Please provide a valid id", 400)
   }
   if (err.name === "ValidationError") {
     customErr = new CustomError(err.message, 400);
