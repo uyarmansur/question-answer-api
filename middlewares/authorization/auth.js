@@ -10,6 +10,9 @@ const {
 } = require("../../helpers/authorization/tokenhelpers");
 const getAccessToRoute = (req, res, next) => {
   const { JWT_SECRET_KEY } = process.env;
+  console.log(JWT_SECRET_KEY,"jwtsecret")
+
+
   if (!isTokenIncluded(req)) {
     console.log(req?.headers?.authorization?.split(" ")[1], "token bu");
     return next(
