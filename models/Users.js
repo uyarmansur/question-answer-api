@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-
+const Question = require('./Question')
 
 const UserSchema = new Schema({
   id: {
@@ -104,5 +104,15 @@ UserSchema.pre("save", async function (next) {
   this.password = hash; // Hash the password before saving
   next();
 });
+
+UserSchema.post('remove', async function () {
+  await Question.deleteMany({
+    user: this._id
+  })
+
+
+  
+})
+
 
 module.exports = mongoose.model("User", UserSchema);
