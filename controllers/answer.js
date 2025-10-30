@@ -42,10 +42,23 @@ const getAllAnswerByQuestion = asyncErrorWrapper(async (req, res, next) => {
 })
 
 
+const getSingleAnswer = asyncErrorWrapper(async (req, res, next) => {
+    const { answer_id } = req.params
 
+    const answer = await Question.findById(answer_id).populate("question").populate("user")
+
+
+
+
+    return res.status(200).json({
+        success: true,
+        data: answer
+    })
+})
 
 
 module.exports = {
     addNewAnswerToQuestion,
-    getAllAnswerByQuestion
+    getAllAnswerByQuestion,
+    getSingleAnswer
 }
