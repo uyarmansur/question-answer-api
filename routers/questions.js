@@ -1,4 +1,7 @@
 const express = require("express");
+
+const answer = require('./answer')
+
 const { askNewQuestion, getAllQuestions, getSingleQuestion, editQuestion, deleteQuestion, likeQuestion, undoQuestion } = require("../controllers/questions");
 
 const { getAccessToRoute, getQuestionOwnerAccess } = require("../middlewares/authorization/auth");
@@ -16,6 +19,8 @@ router.put("/:id/edit", [getAccessToRoute, checkQuestionExist, getQuestionOwnerA
 router.delete("/:id/delete", [getAccessToRoute, checkQuestionExist, getQuestionOwnerAccess], deleteQuestion)
 
 
+
+router.use("/:question_id/answers", checkQuestionExist, answer)
 
 module.exports = router;
 
