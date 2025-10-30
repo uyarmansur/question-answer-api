@@ -13,14 +13,31 @@ const addNewAnswerToQuestion = asyncErrorWrapper(async (req, res, next) => {
 
     const answer = await Answer.create({
         ...information,
-        question:question_id,
-        user:user_id 
+        question: question_id,
+        user: user_id
     })
 
 
-    return res.json({
-        success:true,
-        data:answer
+    return res.status(200).json({
+        success: true,
+        data: answer
+    })
+})
+
+
+const getAllAnswerByQuestion = asyncErrorWrapper(async (req, res, next) => {
+    const { question_id } = req.params
+
+    const question = await Question.findById(question_id).populate("answers")
+
+    const answers = question.answers
+
+
+
+    return res.status(200).json({
+        success: true,
+        count: answers.length,
+        data: answers
     })
 })
 
@@ -28,9 +45,7 @@ const addNewAnswerToQuestion = asyncErrorWrapper(async (req, res, next) => {
 
 
 
-
-
-
 module.exports = {
-    addNewAnswerToQuestion
+    addNewAnswerToQuestion,
+    getAllAnswerByQuestion
 }
