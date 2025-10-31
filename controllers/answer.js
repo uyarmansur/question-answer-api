@@ -71,9 +71,27 @@ const editAnswer = asyncErrorWrapper(async (req, res, next) => {
     })
 })
 
+const deleteAnswer = asyncErrorWrapper(async (req, res, next) => {
+    const { answer_id } = req.params
+    const { question_id } = req.params
+    await Answer.findByIdAndDelete(answer_id)
+
+    const question = await Question.findById(question_id)
+
+    question.answers.splice(question.answers.indexOf(answer_id), 1)
+
+    await question.save()
+
+    return res.status(200).json({
+        success: true,
+        data: question
+    })
+})
+
 module.exports = {
     addNewAnswerToQuestion,
     getAllAnswerByQuestion,
     getSingleAnswer,
-    editAnswer
+    editAnswer,
+    deleteAnswer
 }
