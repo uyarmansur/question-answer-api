@@ -3,6 +3,7 @@ const asyncErrorWrapper = require("express-async-handler")
 const jwt = require("jsonwebtoken");
 const User = require("../../models/Users")
 const Question = require('../../models/Question')
+const Answer = require("../../models/Answer");
 
 const {
   isTokenIncluded,
@@ -64,8 +65,24 @@ const getQuestionOwnerAccess = asyncErrorWrapper(async (req, res, next) => {
   next()
 })
 
+const getAnswerOwnerAccess = asyncErrorWrapper(async (req, res, next) => {
+
+  const userId = req.user.id;
+  const answerId = req.params.id;
+
+  const answer = await Answer.findById(answerId)
+
+  if (answer.user != userId) {
+    return next(new CustomError("Only owner of this answer can make changes", 403))
+  }
+
+  next()
+})
+
+
 module.exports = {
   getAccessToRoute,
   getAdminAccess,
-  getQuestionOwnerAccess
+  getQuestionOwnerAccess,
+  getAnswerOwnerAccess
 };
